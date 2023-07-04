@@ -1,0 +1,58 @@
+const getState = ({ getStore, getActions, setStore }) => {
+	return {
+		store: {
+			people: [],
+			planets: [],
+			vehicles: [],
+			favorites: []
+		},
+		actions: {
+			getPlanets: async() => {
+				console.log("1");
+				await fetch("https://www.swapi.tech/api/planets/", {
+					method: "GET",
+					'Content-Type' : "application/json"
+				}).then(res => {
+					if(!res.ok)
+						throw new Error(res.statusText);
+					return res.json();
+				}).then(async data => {
+					console.log("2");
+					//console.log("data: " + JSON.stringify(data));
+					const {results} = data;
+					
+					const fetchPromises = await results.map(async element => {
+						//console.log(element["url"]);
+						return fetch(element["url"])
+						.then(res => {
+							if(!res.ok)
+								throw new Error(res.statusText);
+							
+							return res.json();
+						}).then(
+							console.log("3");
+					
+							Promise.all(fetchPromises)
+							.then(async response => {
+								console.log("all promises are done");
+								let store = getStore();
+								response.map(async element => {
+									await store.planets.push(element);
+								});
+								await setStore(store);
+								return response;
+							});
+						)						
+						.catch(error => {
+							console.log(error);
+						})
+					});
+
+					
+				})
+			}
+		}
+	};
+};
+
+export default getState;
